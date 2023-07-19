@@ -3,14 +3,14 @@ from tkinter import messagebox
 import os
 import hashlib
 
-# Define the predefined username and password (replace these with your desired credentials)
-valid_credentials = {'user123': 'password123', 'admin': 'admin123'}
+# Dictionary to store user credentials (username: password)
+user_credentials = {}
 
 def authenticate_user():
     username = entry_username.get()
     password = entry_password.get()
 
-    if username in valid_credentials and valid_credentials[username] == password:
+    if username in user_credentials and user_credentials[username] == password:
         # Successful authentication, open the main application window
         open_main_app()
     else:
@@ -38,6 +38,9 @@ def open_main_app():
             messagebox.showerror("Error", "Invalid directory path.")
             return
 
+        threats_found = False
+        threats_list = []
+
         # List all files in the scan directory and its subdirectories
         for root, _, files in os.walk(scan_path):
             for file in files:
@@ -53,10 +56,13 @@ def open_main_app():
                 ]
 
                 if file_hash not in known_safe_hashes:
-                    messagebox.showwarning("Scan Result", f"Threat detected in file: {file_path}")
-                    return
+                    threats_found = True
+                    threats_list.append(file_path)
 
-        messagebox.showinfo("Scan Result", "No threats were detected.")
+        if threats_found:
+            messagebox.showwarning("Scan Result", f"Threats found in the following files:\n\n{', '.join(threats_list)}")
+        else:
+            messagebox.showinfo("Scan Result", "No threats were detected.")
 
     # Add an entry for users to input the root directory path for scanning
     label_scan_path = tk.Label(main_app_window, text="Enter the root directory path to scan:")
@@ -71,6 +77,19 @@ def open_main_app():
     # ... More code for the main application window ...
 
     main_app_window.mainloop()
+
+def create_account():
+    username = entry_new_username.get()
+    password = entry_new_password.get()
+
+    if username and password:
+        if username in user_credentials:
+            messagebox.showerror("Error", "Username already exists. Please choose a different username.")
+        else:
+            user_credentials[username] = password
+            messagebox.showinfo("Account Created", "Your account has been created successfully. You can now log in.")
+    else:
+        messagebox.showerror("Error", "Please enter a valid username and password.")
 
 # Create the login window
 login_window = tk.Tk()
@@ -91,5 +110,20 @@ entry_password.pack()
 # Login button
 login_button = tk.Button(login_window, text="Login", command=authenticate_user)
 login_button.pack()
+
+# Create an account label and entries
+label_new_username = tk.Label(login_window, text="New Username:")
+label_new_username.pack()
+entry_new_username = tk.Entry(login_window)
+entry_new_username.pack()
+
+label_new_password = tk.Label(login_window, text="New Password:")
+label_new_password.pack()
+entry_new_password = tk.Entry(login_window, show="*")
+entry_new_password.pack()
+
+# Create Account button
+create_account_button = tk.Button(login_window, text="Create Account", command=create_account)
+create_account_button.pack()
 
 login_window.mainloop()
